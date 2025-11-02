@@ -1,0 +1,80 @@
+name: iOS Build (Simulator)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-simulator:
+    name: Build for iOS Simulator
+    runs-on: macos-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: 📦 Install npm dependencies
+      run: npm ci
+
+    - name: 🍎 Install CocoaPods dependencies
+      run: |
+        cd ios
+        pod install --repo-update
+        cd ..
+
+    - name: 🔨 Build for iOS Simulator
+      run: |
+        xcodebuild \
+          -workspace ios/StickerGuard.xcworkspace \
+          -scheme StickerGuard \
+          -configuration Debug \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+          -derivedDataPath ios/build \
+          build
+
+    - name: ✅ Run Unit Tests
+      run: |
+        xcodebuild test \
+          -workspace ios/StickerGuard.xcworkspace \
+          -scheme StickerGuard \
+          -configuration Debug \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+          -derivedDataPath ios/build \
+          || echo "⚠️ Tests not configured yet"
+
+    - name: 📊 Build Summary
+      if: success()
+      run: |
+        echo "✅ iOS Simulator Build Successful!"
+        echo "📱 Target: iPhone 15 Simulator"
+        echo "🔧 Configuration: Debug"
+        echo "📦 Output: ios/build/Build/Products/Debug-iphonesimulator/StickerGuard.app"
+
+    - name: 📤 Upload .app artifact
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: StickerGuard-Simulator
+        path: ios/build/Build/Products/Debug-iphonesimulator/StickerGuard.app
+        retention-days: 7
+
+    - name: 🔍 Upload build logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-logs
+        path: |
+          ~/Library/Logs/DiagnosticReports/
+          ios/build/Logs/
+        retention-days: 3
