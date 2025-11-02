@@ -10,7 +10,6 @@
     "start": "react-native start",
     "test": "jest",
     "lint": "eslint .",
-    "postinstall": "cd ios && pod install && cd ..",
     "clean:ios": "cd ios && xcodebuild clean && cd ..",
     "clean:all": "rm -rf node_modules && rm -rf ios/Pods && rm -rf ios/build",
     "setup": "npm install && cd ios && pod install && cd ..",
