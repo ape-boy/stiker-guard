@@ -50,7 +50,16 @@ export async function checkFirebaseConnection(): Promise<boolean> {
 
     console.log('✅ Firebase 연결 성공');
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    if (
+      error?.code === 'firestore/permission-denied' ||
+      error?.code === 'permission-denied'
+    ) {
+      console.warn(
+        '⚠️ Firestore 헬스 체크가 보안 규칙으로 차단되었습니다. 배포 환경에서는 정상입니다.'
+      );
+      return true; // 권한 문제는 앱 초기화를 막지 않음
+    }
     console.error('❌ Firebase 연결 실패:', error);
     return false;
   }
