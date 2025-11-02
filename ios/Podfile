@@ -23,34 +23,18 @@ target 'StickerGuard' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  # Firebase
+  # Firebase SDK - Required for React Native Firebase
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseFirestore', :modular_headers => true
   pod 'FirebaseAuth', :modular_headers => true
   pod 'FirebaseFunctions', :modular_headers => true
+  pod 'FirebaseMessaging', :modular_headers => true
+  pod 'FirebaseAnalytics', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
 
-  # React Native Firebase
-  pod 'RNFBApp', :path => '../node_modules/@react-native-firebase/app'
-  pod 'RNFBFirestore', :path => '../node_modules/@react-native-firebase/firestore'
-  pod 'RNFBAuth', :path => '../node_modules/@react-native-firebase/auth'
-  pod 'RNFBFunctions', :path => '../node_modules/@react-native-firebase/functions'
-  pod 'RNFBMessaging', :path => '../node_modules/@react-native-firebase/messaging'
-  pod 'RNFBAnalytics', :path => '../node_modules/@react-native-firebase/analytics'
-
-  # Location Services
-  pod 'react-native-geolocation', :path => '../node_modules/react-native-geolocation-service'
-
-  # Camera
-  pod 'react-native-vision-camera', :path => '../node_modules/react-native-vision-camera'
-
-  # Notifications
-  pod 'RNNotifee', :path => '../node_modules/@notifee/react-native'
-
-  # Storage
-  pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-async-storage/async-storage'
-  pod 'RNCEncryptedStorage', :path => '../node_modules/react-native-encrypted-storage'
+  # Note: React Native Firebase modules (RNFB*) are auto-linked
+  # Note: Other React Native libraries are also auto-linked
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
