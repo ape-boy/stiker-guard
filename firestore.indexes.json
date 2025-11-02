@@ -1,0 +1,25 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "checkIns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "checkIns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
