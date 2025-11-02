@@ -49,6 +49,8 @@
     "@react-native/eslint-config": "0.76.1",
     "@react-native/metro-config": "0.76.1",
     "@react-native/typescript-config": "0.76.1",
+    "@react-native-community/cli": "^15.0.0",
+    "@react-native-community/cli-platform-ios": "^15.0.0",
     "@types/react": "^18.3.0",
     "@types/react-test-renderer": "^18.3.0",
     "babel-plugin-module-resolver": "^5.0.0",
