@@ -1,6 +1,5 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
-apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
 
 /**
@@ -9,34 +8,11 @@ apply plugin: 'com.google.gms.google-services'
 def enableProguardInReleaseBuilds = true
 
 /**
- * The preferred build flavor of JavaScriptCore (JSC)
- *
- * For example, to use the international variant, you can use:
- * `def jscFlavor = 'org.webkit:android-jsc-intl:+'`
- *
- * The international variant includes ICU i18n library and necessary data
- * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
- * give correct results when using with locales other than en-US. Note that
- * this variant is about 6MiB larger per architecture than default.
+ * React Native and Hermes configuration
  */
-def jscFlavor = 'org.webkit:android-jsc:+'
-
-/**
- * React Native configuration
- */
-react {
-    // Paths
-    root = file("../../")
-    cliFile = file("../../node_modules/react-native/cli.js")
-
-    // Architectures to build (removed x86/x86_64 for size optimization)
-    architectures = ["armeabi-v7a", "arm64-v8a"]
-
-    // Hermes engine
-    hermesEnabled = true
-
-    // Debugging
-    debuggableVariants = ["debug"]
+def reactNativeArchitectures() {
+    def value = project.getProperties().get("reactNativeArchitectures")
+    return value ? value.split(",") : ["armeabi-v7a", "arm64-v8a"]
 }
 
 android {
@@ -55,6 +31,15 @@ android {
 
         // MultiDex support for legacy devices
         multiDexEnabled true
+    }
+
+    splits {
+        abi {
+            reset()
+            enable true
+            universalApk false
+            include(*reactNativeArchitectures())
+        }
     }
 
     signingConfigs {
@@ -101,15 +86,26 @@ android {
 }
 
 dependencies {
-    // The version of react-native is set by the React Native Gradle Plugin
-    implementation("com.facebook.react:react-android")
+    // React Native core
+    implementation fileTree(dir: "libs", include: ["*.jar", "*.aar"])
+    implementation("com.facebook.react:react-android:0.75.4")
+    implementation("com.facebook.react:hermes-android:0.75.4")
 
-    // Hermes engine - managed by React Native plugin
-    if (hermesEnabled) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
-    }
+    // React Native modules - manual dependencies
+    implementation project(':react-native-async-storage_async-storage')
+    implementation project(':react-native-firebase_app')
+    implementation project(':react-native-firebase_analytics')
+    implementation project(':react-native-firebase_auth')
+    implementation project(':react-native-firebase_firestore')
+    implementation project(':react-native-firebase_functions')
+    implementation project(':react-native-firebase_messaging')
+    implementation project(':notifee_react-native')
+    implementation project(':react-native-encrypted-storage')
+    implementation project(':react-native-geolocation-service')
+    implementation project(':react-native-safe-area-context')
+    implementation project(':react-native-screens')
+    implementation project(':react-native-vision-camera')
+    implementation project(':react-native-gesture-handler')
 
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:32.7.0')
@@ -126,6 +122,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.multidex:multidex:2.0.1'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
