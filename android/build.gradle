@@ -23,13 +23,6 @@ buildscript {
     }
 }
 
-plugins {
-    id("com.facebook.react.settings")
-}
-
-extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
-    ex.autolinkLibrariesFromCommand()
-}
 
 allprojects {
     repositories {
