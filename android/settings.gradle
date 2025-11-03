@@ -1,14 +1,19 @@
 pluginManagement {
-    includeBuild("../node_modules/@react-native/gradle-plugin")
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
 }
 
 plugins {
     id("com.facebook.react.settings")
 }
 
-extensions.configure(com.facebook.react.ReactSettingsExtension) {
-    autolinkLibrariesFromCommand()
+extensions.configure(com.facebook.react.ReactSettingsExtension){ react ->
+    react.autolinkLibrariesFromCommand()
 }
 
 rootProject.name = 'StickerGuard'
 include ':app'
+includeBuild('../node_modules/@react-native/gradle-plugin')
