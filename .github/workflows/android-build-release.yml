@@ -1,0 +1,135 @@
+name: Android Build (Release)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+
+    - name: Cache node modules
+      uses: actions/cache@v3
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Create google-services.json
+      run: |
+        echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
+
+    - name: Create keystore
+      run: |
+        echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 -d > android/app/release.keystore
+
+    - name: Create gradle.properties with signing config
+      run: |
+        cat >> android/gradle.properties << EOF
+        STICKERGUARD_UPLOAD_STORE_FILE=release.keystore
+        STICKERGUARD_UPLOAD_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        STICKERGUARD_UPLOAD_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
+        STICKERGUARD_UPLOAD_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
+        EOF
+
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    - name: Build Android Release APK
+      run: |
+        cd android
+        ./gradlew assembleRelease --no-daemon --stacktrace
+
+    - name: Build Android App Bundle (AAB)
+      run: |
+        cd android
+        ./gradlew bundleRelease --no-daemon --stacktrace
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
+        retention-days: 30
+
+    - name: Upload Release AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-aab
+        path: android/app/build/outputs/bundle/release/app-release.aab
+        retention-days: 30
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          android/app/build/outputs/apk/release/app-release.apk
+          android/app/build/outputs/bundle/release/app-release.aab
+        body: |
+          ## Sticker Guard Android Release
+
+          Version: ${{ github.ref_name }}
+
+          ### Downloads
+          - **APK**: Direct installation file
+          - **AAB**: Google Play Store bundle
+
+          ### Installation
+          1. Download the APK file
+          2. Enable "Unknown Sources" in Android settings
+          3. Install the APK
+          4. Grant required permissions
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Clean up keystore
+      if: always()
+      run: rm -f android/app/release.keystore
+
+    - name: Build status notification
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Android Release Build Successful"
+        else
+          echo "❌ Android Release Build Failed"
+        fi
