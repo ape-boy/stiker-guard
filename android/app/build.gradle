@@ -1,5 +1,6 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
 
 /**
@@ -86,26 +87,15 @@ android {
 }
 
 dependencies {
-    // React Native core
-    implementation fileTree(dir: "libs", include: ["*.jar", "*.aar"])
-    implementation("com.facebook.react:react-android:0.75.4")
-    implementation("com.facebook.react:hermes-android:0.75.4")
+    // The version of react-native is set by the React Native Gradle Plugin
+    implementation("com.facebook.react:react-android")
+    implementation("com.facebook.react:flipper-integration")
 
-    // React Native modules - manual dependencies
-    implementation project(':react-native-async-storage_async-storage')
-    implementation project(':react-native-firebase_app')
-    implementation project(':react-native-firebase_analytics')
-    implementation project(':react-native-firebase_auth')
-    implementation project(':react-native-firebase_firestore')
-    implementation project(':react-native-firebase_functions')
-    implementation project(':react-native-firebase_messaging')
-    implementation project(':notifee_react-native')
-    implementation project(':react-native-encrypted-storage')
-    implementation project(':react-native-geolocation-service')
-    implementation project(':react-native-safe-area-context')
-    implementation project(':react-native-screens')
-    implementation project(':react-native-vision-camera')
-    implementation project(':react-native-gesture-handler')
+    if (hermesEnabled.toBoolean()) {
+        implementation("com.facebook.react:hermes-android")
+    } else {
+        implementation jscFlavor
+    }
 
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:32.7.0')
@@ -136,9 +126,4 @@ dependencies {
     androidTestImplementation 'androidx.test:rules:1.5.0'
 }
 
-// Run this once to be able to run the application with BUCK
-// puts all compile dependencies into folder libs for BUCK to use
-task copyDownloadableDepsToLibs(type: Copy) {
-    from configurations.implementation
-    into 'libs'
-}
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
